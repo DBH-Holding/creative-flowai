@@ -14,7 +14,192 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      briefings: {
+        Row: {
+          business_segment: string | null
+          campaign_name: string
+          created_at: string
+          id: string
+          main_channel: string
+          notes: string | null
+          objective: string
+          open_briefing: string | null
+          target_audience: string
+          user_id: string
+        }
+        Insert: {
+          business_segment?: string | null
+          campaign_name: string
+          created_at?: string
+          id?: string
+          main_channel?: string
+          notes?: string | null
+          objective: string
+          open_briefing?: string | null
+          target_audience: string
+          user_id: string
+        }
+        Update: {
+          business_segment?: string | null
+          campaign_name?: string
+          created_at?: string
+          id?: string
+          main_channel?: string
+          notes?: string | null
+          objective?: string
+          open_briefing?: string | null
+          target_audience?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      campaigns: {
+        Row: {
+          ad: Json
+          briefing_id: string
+          created_at: string
+          id: string
+          objective: string
+          posts: Json
+          status: string
+          summary: string
+          target_audience: string
+          tone: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ad?: Json
+          briefing_id: string
+          created_at?: string
+          id?: string
+          objective: string
+          posts?: Json
+          status?: string
+          summary: string
+          target_audience: string
+          tone: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ad?: Json
+          briefing_id?: string
+          created_at?: string
+          id?: string
+          objective?: string
+          posts?: Json
+          status?: string
+          summary?: string
+          target_audience?: string
+          tone?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaigns_briefing_id_fkey"
+            columns: ["briefing_id"]
+            isOneToOne: false
+            referencedRelation: "briefings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      checklists: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          done: boolean
+          id: string
+          text: string
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          done?: boolean
+          id?: string
+          text: string
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          done?: boolean
+          id?: string
+          text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checklists_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      feedbacks: {
+        Row: {
+          author: string
+          campaign_id: string
+          created_at: string
+          id: string
+          message: string
+          user_id: string
+        }
+        Insert: {
+          author: string
+          campaign_id: string
+          created_at?: string
+          id?: string
+          message: string
+          user_id: string
+        }
+        Update: {
+          author?: string
+          campaign_id?: string
+          created_at?: string
+          id?: string
+          message?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedbacks_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
