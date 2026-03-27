@@ -13,6 +13,7 @@ import PlansPage from "./pages/PlansPage";
 import BillingPage from "./pages/BillingPage";
 import ApisPage from "./pages/ApisPage";
 import IntegrationsPage from "./pages/IntegrationsPage";
+import DashboardPage from "./pages/DashboardPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/auth" element={<AuthPage />} />
+            <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/briefing" element={<BriefingPage />} />
             <Route path="/campanha" element={<CampaignPage />} />
             <Route path="/planos" element={<PlansPage />} />

@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const navItems = [
   { label: "Produto", href: "/" },
+  { label: "Dashboard", href: "/dashboard", auth: true },
   { label: "Planos", href: "/planos" },
   { label: "APIs", href: "/apis" },
   { label: "Integrações", href: "/integracoes" },
@@ -27,7 +28,7 @@ export default function Navbar() {
 
         {/* Desktop */}
         <div className="hidden md:flex items-center gap-1">
-          {navItems.map((item) => (
+          {navItems.filter(item => !item.auth || user).map((item) => (
             <Link
               key={item.href}
               to={item.href}
