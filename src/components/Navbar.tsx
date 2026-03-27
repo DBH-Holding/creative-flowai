@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const navItems = [
   { label: "Produto", href: "/" },
+  { label: "Dashboard", href: "/dashboard", auth: true },
   { label: "Planos", href: "/planos" },
   { label: "APIs", href: "/apis" },
   { label: "Integrações", href: "/integracoes" },
