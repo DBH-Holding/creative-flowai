@@ -28,7 +28,7 @@ export default function Navbar() {
 
         {/* Desktop */}
         <div className="hidden md:flex items-center gap-1">
-          {navItems.map((item) => (
+          {navItems.filter(item => !item.auth || user).map((item) => (
             <Link
               key={item.href}
               to={item.href}
