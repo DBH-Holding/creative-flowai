@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Campaign, ApprovalStatus, Feedback, AIInsight, ChecklistItem } from "@/types";
+import { ApprovalStatus, Feedback, AIInsight, ChecklistItem } from "@/types";
 import { analyzeFeeedback, generateChecklist } from "@/services/ai-mock";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Sparkles, MessageSquare, CheckCircle, ArrowLeft, Send, Loader2,
   ThumbsUp, AlertTriangle, ListChecks, Eye, Clock, Check, X,
@@ -16,9 +18,24 @@ const statusConfig: Record<ApprovalStatus, { label: string; color: string; icon:
   ajustes_solicitados: { label: "Ajustes solicitados", color: "text-destructive", icon: AlertTriangle },
 };
 
+interface DBCampaign {
+  id: string;
+  summary: string;
+  objective: string;
+  target_audience: string;
+  tone: string;
+  posts: any;
+  ad: any;
+  status: string;
+}
+
 export default function CampaignPage() {
   const navigate = useNavigate();
-  const [campaign, setCampaign] = useState<Campaign | null>(null);
+  const [searchParams] = useSearchParams();
+  const { user } = useAuth();
+  const campaignId = searchParams.get("id");
+
+  const [campaign, setCampaign] = useState<DBCampaign | null>(null);
   const [status, setStatus] = useState<ApprovalStatus>("em_analise");
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
   const [newFeedback, setNewFeedback] = useState("");
@@ -28,18 +45,64 @@ export default function CampaignPage() {
   const [loadingChecklist, setLoadingChecklist] = useState(false);
 
   useEffect(() => {
-    const data = sessionStorage.getItem("cf_campaign");
-    if (data) setCampaign(JSON.parse(data));
-    else navigate("/briefing");
-  }, [navigate]);
+    if (!campaignId) { navigate("/briefing"); return; }
 
-  const addFeedback = () => {
-    if (!newFeedback.trim()) return;
-    setFeedbacks((prev) => [
-      ...prev,
-      { id: crypto.randomUUID(), author: "Usuário Demo", message: newFeedback, createdAt: new Date().toISOString() },
-    ]);
-    setNewFeedback("");
+    const loadCampaign = async () => {
+      const { data, error } = await supabase
+        .from("campaigns")
+        .select("*")
+        .eq("id", campaignId)
+        .single();
+
+      if (error || !data) { navigate("/briefing"); return; }
+      setCampaign(data);
+      setStatus(data.status as ApprovalStatus);
+
+      // Load feedbacks
+      const { data: fbs } = await supabase
+        .from("feedbacks")
+        .select("*")
+        .eq("campaign_id", campaignId)
+        .order("created_at", { ascending: true });
+      if (fbs) setFeedbacks(fbs.map(f => ({ id: f.id, author: f.author, message: f.message, createdAt: f.created_at })));
+
+      // Load checklists
+      const { data: cls } = await supabase
+        .from("checklists")
+        .select("*")
+        .eq("campaign_id", campaignId)
+        .order("created_at", { ascending: true });
+      if (cls) setChecklist(cls.map(c => ({ id: c.id, text: c.text, done: c.done })));
+    };
+
+    loadCampaign();
+  }, [campaignId, navigate]);
+
+  const updateStatus = async (newStatus: ApprovalStatus) => {
+    setStatus(newStatus);
+    if (campaignId) {
+      await supabase.from("campaigns").update({ status: newStatus }).eq("id", campaignId);
+    }
+  };
+
+  const addFeedback = async () => {
+    if (!newFeedback.trim() || !user || !campaignId) return;
+
+    const { data, error } = await supabase
+      .from("feedbacks")
+      .insert({
+        campaign_id: campaignId,
+        user_id: user.id,
+        author: user.email || "Usuário",
+        message: newFeedback,
+      })
+      .select()
+      .single();
+
+    if (data && !error) {
+      setFeedbacks((prev) => [...prev, { id: data.id, author: data.author, message: data.message, createdAt: data.created_at }]);
+      setNewFeedback("");
+    }
   };
 
   const handleAnalyze = async () => {
@@ -50,19 +113,37 @@ export default function CampaignPage() {
   };
 
   const handleChecklist = async () => {
+    if (!campaignId) return;
     setLoadingChecklist(true);
     const items = await generateChecklist();
-    setChecklist(items);
+
+    // Save to DB
+    const rows = items.map(item => ({
+      campaign_id: campaignId,
+      text: item.text,
+      done: false,
+    }));
+
+    const { data } = await supabase.from("checklists").insert(rows).select();
+    if (data) {
+      setChecklist(data.map(c => ({ id: c.id, text: c.text, done: c.done })));
+    }
     setLoadingChecklist(false);
   };
 
-  const toggleCheck = (id: string) => {
+  const toggleCheck = async (id: string) => {
+    const item = checklist.find(c => c.id === id);
+    if (!item) return;
+
     setChecklist((prev) => prev.map((c) => (c.id === id ? { ...c, done: !c.done } : c)));
+    await supabase.from("checklists").update({ done: !item.done }).eq("id", id);
   };
 
   if (!campaign) return null;
 
   const StatusIcon = statusConfig[status].icon;
+  const posts = campaign.posts as Array<{ id: string; title: string; copy: string; cta: string; channel: string }>;
+  const ad = campaign.ad as { headline: string; body: string; cta: string; format: string };
 
   return (
     <div className="min-h-screen pt-24 pb-16">
@@ -89,7 +170,7 @@ export default function CampaignPage() {
             </div>
             <div className="p-3 rounded-lg bg-secondary">
               <span className="text-muted-foreground">Público-alvo</span>
-              <p className="font-medium mt-1">{campaign.targetAudience}</p>
+              <p className="font-medium mt-1">{campaign.target_audience}</p>
             </div>
             <div className="p-3 rounded-lg bg-secondary">
               <span className="text-muted-foreground">Tom de comunicação</span>
@@ -101,7 +182,7 @@ export default function CampaignPage() {
         {/* Posts */}
         <h2 className="text-xl font-bold mb-4">Sugestões de Posts</h2>
         <div className="grid gap-4 mb-6">
-          {campaign.posts.map((post) => (
+          {posts.map((post) => (
             <div key={post.id} className="rounded-xl border border-border bg-card p-5">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-semibold">{post.title}</h3>
@@ -119,21 +200,21 @@ export default function CampaignPage() {
         <h2 className="text-xl font-bold mb-4">Ideia de Anúncio</h2>
         <div className="rounded-xl border border-primary/30 bg-card p-5 mb-6 glow">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-primary">{campaign.ad.format}</span>
+            <span className="text-xs font-medium text-primary">{ad.format}</span>
           </div>
-          <h3 className="font-bold text-lg mb-2">{campaign.ad.headline}</h3>
-          <p className="text-sm text-muted-foreground mb-3">{campaign.ad.body}</p>
-          <Button variant="hero" size="sm">{campaign.ad.cta}</Button>
+          <h3 className="font-bold text-lg mb-2">{ad.headline}</h3>
+          <p className="text-sm text-muted-foreground mb-3">{ad.body}</p>
+          <Button variant="hero" size="sm">{ad.cta}</Button>
         </div>
 
         {/* Simulated Creative Card */}
         <div className="rounded-xl border border-border overflow-hidden mb-8">
           <div className="aspect-video bg-gradient-to-br from-primary/20 via-card to-primary/5 flex items-center justify-center relative">
             <div className="text-center p-8">
-              <p className="text-4xl font-bold mb-2">{campaign.ad.headline.split("—")[0]}</p>
-              <p className="text-muted-foreground">{campaign.ad.body.slice(0, 80)}...</p>
+              <p className="text-4xl font-bold mb-2">{ad.headline.split("—")[0]}</p>
+              <p className="text-muted-foreground">{ad.body.slice(0, 80)}...</p>
               <div className="mt-4 inline-flex items-center justify-center px-6 py-2 rounded-lg bg-primary text-primary-foreground font-medium text-sm">
-                {campaign.ad.cta}
+                {ad.cta}
               </div>
             </div>
             <div className="absolute top-3 right-3 text-xs px-2 py-1 rounded bg-secondary text-muted-foreground">Preview do Criativo</div>
@@ -175,10 +256,10 @@ export default function CampaignPage() {
 
           {/* Action buttons */}
           <div className="flex flex-wrap gap-3">
-            <Button variant="hero" size="sm" onClick={() => setStatus("aprovado")}>
+            <Button variant="hero" size="sm" onClick={() => updateStatus("aprovado")}>
               <ThumbsUp className="h-4 w-4" /> Aprovar
             </Button>
-            <Button variant="outline" size="sm" onClick={() => setStatus("ajustes_solicitados")}>
+            <Button variant="outline" size="sm" onClick={() => updateStatus("ajustes_solicitados")}>
               <AlertTriangle className="h-4 w-4" /> Solicitar ajustes
             </Button>
             <Button variant="subtle" size="sm" onClick={handleAnalyze} disabled={loadingInsight}>

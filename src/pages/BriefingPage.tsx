@@ -3,10 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Loader2, Sparkles } from "lucide-react";
 import { generateCampaign } from "@/services/ai-mock";
-import { Campaign } from "@/types";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function BriefingPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     campaignName: "",
@@ -21,13 +23,55 @@ export default function BriefingPage() {
   const update = (key: string, value: string) => setForm((f) => ({ ...f, [key]: value }));
 
   const handleGenerate = async () => {
+    if (!user) {
+      navigate("/auth");
+      return;
+    }
+
     setLoading(true);
     try {
       const campaign = await generateCampaign(form);
-      // Store in sessionStorage for demo
-      sessionStorage.setItem("cf_campaign", JSON.stringify(campaign));
-      sessionStorage.setItem("cf_briefing", JSON.stringify(form));
-      navigate("/campanha");
+
+      // Save briefing to DB
+      const { data: briefing, error: bErr } = await supabase
+        .from("briefings")
+        .insert({
+          user_id: user.id,
+          campaign_name: form.campaignName,
+          business_segment: form.businessSegment || null,
+          objective: form.objective,
+          target_audience: form.targetAudience,
+          main_channel: form.mainChannel,
+          notes: form.notes || null,
+          open_briefing: form.openBriefing || null,
+        })
+        .select()
+        .single();
+
+      if (bErr) throw bErr;
+
+      // Save campaign to DB
+      const { data: savedCampaign, error: cErr } = await supabase
+        .from("campaigns")
+        .insert({
+          user_id: user.id,
+          briefing_id: briefing.id,
+          summary: campaign.summary,
+          objective: campaign.objective,
+          target_audience: campaign.targetAudience,
+          tone: campaign.tone,
+          posts: campaign.posts as any,
+          ad: campaign.ad as any,
+          status: "em_analise",
+        })
+        .select()
+        .single();
+
+      if (cErr) throw cErr;
+
+      navigate(`/campanha?id=${savedCampaign.id}`);
+    } catch (err) {
+      console.error("Error saving campaign:", err);
     } finally {
       setLoading(false);
     }
@@ -44,6 +88,9 @@ export default function BriefingPage() {
         <div className="mb-10">
           <h1 className="text-3xl font-bold mb-2">Briefing Inteligente</h1>
           <p className="text-muted-foreground">Preencha os dados da campanha e deixe a IA fazer o resto.</p>
+          {!user && (
+            <p className="text-sm text-warning mt-2">Faça login para salvar suas campanhas.</p>
+          )}
         </div>
 
         <div className="space-y-6">
