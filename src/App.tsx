@@ -14,6 +14,11 @@ import BillingPage from "./pages/BillingPage";
 import ApisPage from "./pages/ApisPage";
 import IntegrationsPage from "./pages/IntegrationsPage";
 import DashboardPage from "./pages/DashboardPage";
+import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
+import AdminUsersPage from "./pages/admin/AdminUsersPage";
+import AdminSubscriptionsPage from "./pages/admin/AdminSubscriptionsPage";
+import AdminPlansPage from "./pages/admin/AdminPlansPage";
+import AdminRevenuePage from "./pages/admin/AdminRevenuePage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +41,11 @@ const App = () => (
             <Route path="/billing" element={<BillingPage />} />
             <Route path="/apis" element={<ApisPage />} />
             <Route path="/integracoes" element={<IntegrationsPage />} />
+            <Route path="/admin" element={<AdminDashboardPage />} />
+            <Route path="/admin/users" element={<AdminUsersPage />} />
+            <Route path="/admin/subscriptions" element={<AdminSubscriptionsPage />} />
+            <Route path="/admin/plans" element={<AdminPlansPage />} />
+            <Route path="/admin/revenue" element={<AdminRevenuePage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

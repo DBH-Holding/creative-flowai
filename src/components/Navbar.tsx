@@ -1,8 +1,9 @@
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
-import { Menu, X, LogOut, User } from "lucide-react";
+import { Menu, X, LogOut, User, Shield } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAdminRole } from "@/hooks/useAdminRole";
 
 const navItems = [
   { label: "Produto", href: "/" },
@@ -17,6 +18,7 @@ export default function Navbar() {
   const location = useLocation();
   const [open, setOpen] = useState(false);
   const { user, signOut } = useAuth();
+  const { isAdmin } = useAdminRole();
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-background/80 backdrop-blur-xl">
@@ -54,6 +56,11 @@ export default function Navbar() {
                 <User className="h-4 w-4" />
                 <span className="max-w-[120px] truncate">{user.email}</span>
               </div>
+              {isAdmin && (
+                <Link to="/admin" className="p-2 rounded-md text-primary hover:text-primary/80 transition-colors" title="Admin">
+                  <Shield className="h-4 w-4" />
+                </Link>
+              )}
               <button onClick={signOut} className="p-2 rounded-md text-muted-foreground hover:text-foreground transition-colors" title="Sair">
                 <LogOut className="h-4 w-4" />
               </button>

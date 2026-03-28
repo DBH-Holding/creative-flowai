@@ -173,6 +173,48 @@ export type Database = {
           },
         ]
       }
+      plans: {
+        Row: {
+          active: boolean
+          created_at: string
+          cta: string
+          features: Json
+          highlighted: boolean
+          id: string
+          name: string
+          period: string
+          price: number
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          cta?: string
+          features?: Json
+          highlighted?: boolean
+          id?: string
+          name: string
+          period?: string
+          price?: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          cta?: string
+          features?: Json
+          highlighted?: boolean
+          id?: string
+          name?: string
+          period?: string
+          price?: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -200,15 +242,101 @@ export type Database = {
         }
         Relationships: []
       }
+      subscriptions: {
+        Row: {
+          campaigns_limit: number | null
+          campaigns_used: number
+          cancelled_at: string | null
+          created_at: string
+          feedbacks_limit: number | null
+          feedbacks_used: number
+          id: string
+          next_billing_date: string | null
+          payment_status: string
+          plan_id: string
+          started_at: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          campaigns_limit?: number | null
+          campaigns_used?: number
+          cancelled_at?: string | null
+          created_at?: string
+          feedbacks_limit?: number | null
+          feedbacks_used?: number
+          id?: string
+          next_billing_date?: string | null
+          payment_status?: string
+          plan_id: string
+          started_at?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          campaigns_limit?: number | null
+          campaigns_used?: number
+          cancelled_at?: string | null
+          created_at?: string
+          feedbacks_limit?: number | null
+          feedbacks_used?: number
+          id?: string
+          next_billing_date?: string | null
+          payment_status?: string
+          plan_id?: string
+          started_at?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -335,6 +463,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const
