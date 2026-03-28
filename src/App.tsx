@@ -14,6 +14,11 @@ import BillingPage from "./pages/BillingPage";
 import ApisPage from "./pages/ApisPage";
 import IntegrationsPage from "./pages/IntegrationsPage";
 import DashboardPage from "./pages/DashboardPage";
+import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
+import AdminUsersPage from "./pages/admin/AdminUsersPage";
+import AdminSubscriptionsPage from "./pages/admin/AdminSubscriptionsPage";
+import AdminPlansPage from "./pages/admin/AdminPlansPage";
+import AdminRevenuePage from "./pages/admin/AdminRevenuePage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
