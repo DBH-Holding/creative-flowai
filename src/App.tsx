@@ -41,6 +41,11 @@ const App = () => (
             <Route path="/billing" element={<BillingPage />} />
             <Route path="/apis" element={<ApisPage />} />
             <Route path="/integracoes" element={<IntegrationsPage />} />
+            <Route path="/admin" element={<AdminDashboardPage />} />
+            <Route path="/admin/users" element={<AdminUsersPage />} />
+            <Route path="/admin/subscriptions" element={<AdminSubscriptionsPage />} />
+            <Route path="/admin/plans" element={<AdminPlansPage />} />
+            <Route path="/admin/revenue" element={<AdminRevenuePage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
