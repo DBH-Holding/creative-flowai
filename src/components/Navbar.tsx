@@ -56,6 +56,11 @@ export default function Navbar() {
                 <User className="h-4 w-4" />
                 <span className="max-w-[120px] truncate">{user.email}</span>
               </div>
+              {isAdmin && (
+                <Link to="/admin" className="p-2 rounded-md text-primary hover:text-primary/80 transition-colors" title="Admin">
+                  <Shield className="h-4 w-4" />
+                </Link>
+              )}
               <button onClick={signOut} className="p-2 rounded-md text-muted-foreground hover:text-foreground transition-colors" title="Sair">
                 <LogOut className="h-4 w-4" />
               </button>
