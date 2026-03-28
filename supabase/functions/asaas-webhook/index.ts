@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+    "authorization, x-client-info, apikey, content-type, asaas-access-token",
 };
 
 Deno.serve(async (req) => {
@@ -12,6 +12,19 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Validate webhook token
+    const WEBHOOK_SECRET = Deno.env.get("ASAAS_WEBHOOK_SECRET");
+    if (WEBHOOK_SECRET) {
+      const incomingToken = req.headers.get("asaas-access-token");
+      if (incomingToken !== WEBHOOK_SECRET) {
+        console.error("Invalid webhook token");
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     const body = await req.json();
     console.log("Asaas webhook received:", JSON.stringify(body));
 
@@ -54,14 +67,12 @@ Deno.serve(async (req) => {
         break;
       case "PAYMENT_CREATED":
       case "PAYMENT_UPDATED":
-        // No status change needed
         break;
       default:
         console.log("Unhandled event:", event);
     }
 
     if (Object.keys(updates).length > 0) {
-      // Find subscription by user_id (externalReference)
       const { data: subs } = await supabase
         .from("subscriptions")
         .select("id")
