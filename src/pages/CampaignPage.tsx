@@ -107,8 +107,12 @@ export default function CampaignPage() {
 
   const handleAnalyze = async () => {
     setLoadingInsight(true);
-    const result = await analyzeFeeedback(feedbacks.map((f) => f.message));
-    setInsight(result);
+    try {
+      const result = await analyzeFeeedback(feedbacks.map((f) => f.message), campaign?.summary);
+      setInsight(result);
+    } catch (err) {
+      console.error("Error analyzing feedback:", err);
+    }
     setLoadingInsight(false);
   };
 
