@@ -23,9 +23,9 @@ export default function Navbar() {
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-background/80 backdrop-blur-xl">
-      <div className="container mx-auto flex h-24 items-center justify-between px-4">
+      <div className="container mx-auto flex h-28 items-center justify-between px-4">
         <Link to="/" className="flex items-center gap-2">
-          <img src={logo} alt="CreativeFlow AI" className="h-20 w-auto" />
+          <img src={logo} alt="CreativeFlow AI" className="h-24 w-auto" />
         </Link>
 
         {/* Desktop */}
