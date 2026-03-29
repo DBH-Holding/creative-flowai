@@ -5,6 +5,8 @@ import { ApprovalStatus, Feedback, AIInsight, ChecklistItem } from "@/types";
 import { analyzeFeeedback, generateChecklist } from "@/services/ai-service";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSubscription } from "@/hooks/useSubscription";
+import { toast } from "sonner";
 import {
   Sparkles, MessageSquare, CheckCircle, ArrowLeft, Send, Loader2,
   ThumbsUp, AlertTriangle, ListChecks, Eye, Clock, Check, X,
