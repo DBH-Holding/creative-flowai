@@ -77,6 +77,14 @@ export default function BriefingPage() {
 
       if (cErr) throw cErr;
 
+      // Increment campaigns_used in subscription
+      if (sub) {
+        await supabase
+          .from("subscriptions")
+          .update({ campaigns_used: sub.campaigns_used + 1 })
+          .eq("id", sub.id);
+      }
+
       navigate(`/campanha?id=${savedCampaign.id}`);
     } catch (err) {
       console.error("Error saving campaign:", err);
