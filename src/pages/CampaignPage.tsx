@@ -110,6 +110,8 @@ export default function CampaignPage() {
     if (data && !error) {
       setFeedbacks((prev) => [...prev, { id: data.id, author: data.author, message: data.message, createdAt: data.created_at }]);
       setNewFeedback("");
+      // Increment feedbacks_used via RPC
+      await supabase.rpc("increment_feedbacks_used", { _user_id: user.id });
     }
   };
 
