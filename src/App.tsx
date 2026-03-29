@@ -12,6 +12,7 @@ import CampaignPage from "./pages/CampaignPage";
 import PlansPage from "./pages/PlansPage";
 import BillingPage from "./pages/BillingPage";
 import ApisPage from "./pages/ApisPage";
+import ProfilePage from "./pages/ProfilePage";
 import IntegrationsPage from "./pages/IntegrationsPage";
 import DashboardPage from "./pages/DashboardPage";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
@@ -39,6 +40,7 @@ const App = () => (
             <Route path="/campanha" element={<CampaignPage />} />
             <Route path="/planos" element={<PlansPage />} />
             <Route path="/billing" element={<BillingPage />} />
+            <Route path="/perfil" element={<ProfilePage />} />
             <Route path="/apis" element={<ApisPage />} />
             <Route path="/integracoes" element={<IntegrationsPage />} />
             <Route path="/admin" element={<AdminDashboardPage />} />

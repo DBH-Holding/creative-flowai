@@ -1,14 +1,17 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Loader2, Sparkles } from "lucide-react";
+import { Loader2, Sparkles, AlertTriangle } from "lucide-react";
 import { generateCampaign } from "@/services/ai-service";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useSubscription } from "@/hooks/useSubscription";
+import { toast } from "sonner";
 
 export default function BriefingPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { sub, canCreateCampaign, remainingCampaigns, loading: subLoading } = useSubscription();
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     campaignName: "",
@@ -25,6 +28,11 @@ export default function BriefingPage() {
   const handleGenerate = async () => {
     if (!user) {
       navigate("/auth");
+      return;
+    }
+
+    if (!canCreateCampaign()) {
+      toast.error("Você atingiu o limite de campanhas do seu plano. Faça upgrade para continuar.");
       return;
     }
 
@@ -69,6 +77,9 @@ export default function BriefingPage() {
 
       if (cErr) throw cErr;
 
+      // Increment campaigns_used via RPC (bypasses RLS)
+      await supabase.rpc("increment_campaigns_used", { _user_id: user.id });
+
       navigate(`/campanha?id=${savedCampaign.id}`);
     } catch (err) {
       console.error("Error saving campaign:", err);
@@ -90,6 +101,29 @@ export default function BriefingPage() {
           <p className="text-muted-foreground">Preencha os dados da campanha e deixe a IA fazer o resto.</p>
           {!user && (
             <p className="text-sm text-warning mt-2">Faça login para salvar suas campanhas.</p>
+          )}
+          {user && sub && !canCreateCampaign() && (
+            <div className="flex items-center gap-2 mt-3 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-sm">
+              <AlertTriangle className="h-4 w-4 text-destructive shrink-0" />
+              <span className="text-destructive">
+                Limite de campanhas atingido ({sub.campaigns_used}/{sub.campaigns_limit}).{" "}
+                <Link to="/planos" className="underline font-medium">Fazer upgrade</Link>
+              </span>
+            </div>
+          )}
+          {user && sub && canCreateCampaign() && remainingCampaigns() !== null && (
+            <p className="text-xs text-muted-foreground mt-2">
+              {remainingCampaigns()} campanha(s) restante(s) neste mês
+            </p>
+          )}
+          {user && !sub && !subLoading && (
+            <div className="flex items-center gap-2 mt-3 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-sm">
+              <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0" />
+              <span className="text-amber-500">
+                Você não tem uma assinatura ativa.{" "}
+                <Link to="/planos" className="underline font-medium">Escolher plano</Link>
+              </span>
+            </div>
           )}
         </div>
 

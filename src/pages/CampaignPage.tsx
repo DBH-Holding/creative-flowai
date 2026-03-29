@@ -5,6 +5,8 @@ import { ApprovalStatus, Feedback, AIInsight, ChecklistItem } from "@/types";
 import { analyzeFeeedback, generateChecklist } from "@/services/ai-service";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSubscription } from "@/hooks/useSubscription";
+import { toast } from "sonner";
 import {
   Sparkles, MessageSquare, CheckCircle, ArrowLeft, Send, Loader2,
   ThumbsUp, AlertTriangle, ListChecks, Eye, Clock, Check, X,
@@ -33,6 +35,7 @@ export default function CampaignPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
+  const { canAddFeedback, remainingFeedbacks } = useSubscription();
   const campaignId = searchParams.get("id");
 
   const [campaign, setCampaign] = useState<DBCampaign | null>(null);
@@ -88,6 +91,11 @@ export default function CampaignPage() {
   const addFeedback = async () => {
     if (!newFeedback.trim() || !user || !campaignId) return;
 
+    if (!canAddFeedback()) {
+      toast.error("Limite de feedbacks atingido. Faça upgrade do seu plano.");
+      return;
+    }
+
     const { data, error } = await supabase
       .from("feedbacks")
       .insert({
@@ -102,6 +110,8 @@ export default function CampaignPage() {
     if (data && !error) {
       setFeedbacks((prev) => [...prev, { id: data.id, author: data.author, message: data.message, createdAt: data.created_at }]);
       setNewFeedback("");
+      // Increment feedbacks_used via RPC
+      await supabase.rpc("increment_feedbacks_used", { _user_id: user.id });
     }
   };
 
