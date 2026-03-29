@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ApprovalStatus, Feedback, AIInsight, ChecklistItem } from "@/types";
-import { analyzeFeeedback, generateChecklist } from "@/services/ai-mock";
+import { analyzeFeeedback, generateChecklist } from "@/services/ai-service";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import {
