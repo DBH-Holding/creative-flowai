@@ -334,6 +334,14 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_campaigns_used: {
+        Args: { _user_id: string }
+        Returns: undefined
+      }
+      increment_feedbacks_used: {
+        Args: { _user_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "user"
