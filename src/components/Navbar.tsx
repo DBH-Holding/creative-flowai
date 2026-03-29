@@ -12,7 +12,8 @@ const navItems = [
   { label: "Planos", href: "/planos" },
   { label: "APIs", href: "/apis" },
   { label: "Integrações", href: "/integracoes" },
-  { label: "Billing", href: "/billing" },
+  { label: "Billing", href: "/billing", auth: true },
+  { label: "Perfil", href: "/perfil", auth: true },
 ];
 
 export default function Navbar() {
