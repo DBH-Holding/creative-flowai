@@ -35,6 +35,7 @@ export default function CampaignPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
+  const { canAddFeedback, remainingFeedbacks } = useSubscription();
   const campaignId = searchParams.get("id");
 
   const [campaign, setCampaign] = useState<DBCampaign | null>(null);
