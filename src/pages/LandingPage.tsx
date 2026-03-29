@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { ArrowRight, Zap, MessageSquare, CheckCircle, BarChart3, Shield, Globe } from "lucide-react";
 import { plans } from "@/data/constants";
 import { cn } from "@/lib/utils";
+import logo from "@/assets/logo.png";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
