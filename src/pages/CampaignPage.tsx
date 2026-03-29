@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ApprovalStatus, Feedback, AIInsight, ChecklistItem } from "@/types";
-import { analyzeFeeedback, generateChecklist } from "@/services/ai-mock";
+import { analyzeFeeedback, generateChecklist } from "@/services/ai-service";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -107,15 +107,22 @@ export default function CampaignPage() {
 
   const handleAnalyze = async () => {
     setLoadingInsight(true);
-    const result = await analyzeFeeedback(feedbacks.map((f) => f.message));
-    setInsight(result);
+    try {
+      const result = await analyzeFeeedback(feedbacks.map((f) => f.message), campaign?.summary);
+      setInsight(result);
+    } catch (err) {
+      console.error("Error analyzing feedback:", err);
+    }
     setLoadingInsight(false);
   };
 
   const handleChecklist = async () => {
     if (!campaignId) return;
     setLoadingChecklist(true);
-    const items = await generateChecklist();
+    const items = await generateChecklist(
+      feedbacks.map(f => f.message),
+      campaign?.summary
+    );
 
     // Save to DB
     const rows = items.map(item => ({
