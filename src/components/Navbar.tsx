@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Menu, X, LogOut, User, Shield } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdminRole } from "@/hooks/useAdminRole";
+import logo from "@/assets/logo.png";
 
 const navItems = [
   { label: "Produto", href: "/" },
