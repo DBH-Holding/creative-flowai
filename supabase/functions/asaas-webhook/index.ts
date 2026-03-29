@@ -28,9 +28,9 @@ Deno.serve(async (req) => {
     const body = await req.json();
     console.log("Asaas webhook received:", JSON.stringify(body));
 
-    const { event, payment } = body;
+    const { event, payment, subscription: asaasSub } = body;
 
-    if (!event || !payment) {
+    if (!event) {
       return new Response(JSON.stringify({ error: "Invalid webhook payload" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -42,7 +42,8 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const externalReference = payment.externalReference;
+    // Get externalReference from payment or subscription
+    const externalReference = payment?.externalReference || asaasSub?.externalReference;
     if (!externalReference) {
       console.log("No externalReference, skipping");
       return new Response(JSON.stringify({ ok: true }), {
@@ -50,47 +51,103 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Map Asaas events to our statuses
-    let updates: Record<string, string> = {};
+    // Find the user's latest subscription
+    const { data: subs } = await supabase
+      .from("subscriptions")
+      .select("id, status, payment_status, plan_id")
+      .eq("user_id", externalReference)
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    if (!subs || subs.length === 0) {
+      console.log("No subscription found for user:", externalReference);
+      return new Response(JSON.stringify({ ok: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const subId = subs[0].id;
+    let updates: Record<string, any> = {};
 
     switch (event) {
+      // Payment events
       case "PAYMENT_CONFIRMED":
       case "PAYMENT_RECEIVED":
-        updates = { payment_status: "paid", status: "active" };
+        updates = {
+          payment_status: "paid",
+          status: "active",
+        };
+        // Set next billing date to 30 days from now on confirmed payment
+        const nextBilling = new Date();
+        nextBilling.setDate(nextBilling.getDate() + 30);
+        updates.next_billing_date = nextBilling.toISOString().split("T")[0];
         break;
+
       case "PAYMENT_OVERDUE":
         updates = { payment_status: "overdue" };
         break;
+
       case "PAYMENT_DELETED":
       case "PAYMENT_REFUNDED":
-        updates = { payment_status: "pending", status: "cancelled" };
+        updates = { payment_status: "pending", status: "cancelled", cancelled_at: new Date().toISOString() };
         break;
+
+      // Subscription events
+      case "SUBSCRIPTION_RENEWED":
+        // Reset monthly usage on renewal
+        updates = {
+          payment_status: "pending",
+          campaigns_used: 0,
+          feedbacks_used: 0,
+        };
+        const renewalDate = new Date();
+        renewalDate.setDate(renewalDate.getDate() + 30);
+        updates.next_billing_date = renewalDate.toISOString().split("T")[0];
+        break;
+
+      case "SUBSCRIPTION_INACTIVE":
+      case "SUBSCRIPTION_DELETED":
+        updates = {
+          status: "cancelled",
+          cancelled_at: new Date().toISOString(),
+        };
+        break;
+
+      case "SUBSCRIPTION_UPDATED":
+        // Handle plan change if value changed
+        if (asaasSub?.value) {
+          const { data: matchingPlan } = await supabase
+            .from("plans")
+            .select("id, name")
+            .eq("price", asaasSub.value)
+            .eq("active", true)
+            .limit(1);
+
+          if (matchingPlan && matchingPlan.length > 0) {
+            updates.plan_id = matchingPlan[0].id;
+          }
+        }
+        break;
+
       case "PAYMENT_CREATED":
       case "PAYMENT_UPDATED":
+        // No action needed
         break;
+
       default:
         console.log("Unhandled event:", event);
     }
 
     if (Object.keys(updates).length > 0) {
-      const { data: subs } = await supabase
+      const { error } = await supabase
         .from("subscriptions")
-        .select("id")
-        .eq("user_id", externalReference)
-        .order("created_at", { ascending: false })
-        .limit(1);
+        .update(updates)
+        .eq("id", subId);
 
-      if (subs && subs.length > 0) {
-        const { error } = await supabase
-          .from("subscriptions")
-          .update(updates)
-          .eq("id", subs[0].id);
-
-        if (error) {
-          console.error("Error updating subscription:", error);
-        } else {
-          console.log(`Updated subscription ${subs[0].id}:`, updates);
-        }
+      if (error) {
+        console.error("Error updating subscription:", error);
+      } else {
+        console.log(`Updated subscription ${subId}:`, updates);
       }
     }
 

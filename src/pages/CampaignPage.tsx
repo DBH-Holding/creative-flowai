@@ -91,6 +91,11 @@ export default function CampaignPage() {
   const addFeedback = async () => {
     if (!newFeedback.trim() || !user || !campaignId) return;
 
+    if (!canAddFeedback()) {
+      toast.error("Limite de feedbacks atingido. Faça upgrade do seu plano.");
+      return;
+    }
+
     const { data, error } = await supabase
       .from("feedbacks")
       .insert({
