@@ -99,6 +99,29 @@ export default function BriefingPage() {
           {!user && (
             <p className="text-sm text-warning mt-2">Faça login para salvar suas campanhas.</p>
           )}
+          {user && sub && !canCreateCampaign() && (
+            <div className="flex items-center gap-2 mt-3 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-sm">
+              <AlertTriangle className="h-4 w-4 text-destructive shrink-0" />
+              <span className="text-destructive">
+                Limite de campanhas atingido ({sub.campaigns_used}/{sub.campaigns_limit}).{" "}
+                <Link to="/planos" className="underline font-medium">Fazer upgrade</Link>
+              </span>
+            </div>
+          )}
+          {user && sub && canCreateCampaign() && remainingCampaigns() !== null && (
+            <p className="text-xs text-muted-foreground mt-2">
+              {remainingCampaigns()} campanha(s) restante(s) neste mês
+            </p>
+          )}
+          {user && !sub && !subLoading && (
+            <div className="flex items-center gap-2 mt-3 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-sm">
+              <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0" />
+              <span className="text-amber-500">
+                Você não tem uma assinatura ativa.{" "}
+                <Link to="/planos" className="underline font-medium">Escolher plano</Link>
+              </span>
+            </div>
+          )}
         </div>
 
         <div className="space-y-6">
