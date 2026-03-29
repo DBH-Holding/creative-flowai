@@ -119,7 +119,10 @@ export default function CampaignPage() {
   const handleChecklist = async () => {
     if (!campaignId) return;
     setLoadingChecklist(true);
-    const items = await generateChecklist();
+    const items = await generateChecklist(
+      feedbacks.map(f => f.message),
+      campaign?.summary
+    );
 
     // Save to DB
     const rows = items.map(item => ({
