@@ -31,6 +31,11 @@ export default function BriefingPage() {
       return;
     }
 
+    if (!canCreateCampaign()) {
+      toast.error("Você atingiu o limite de campanhas do seu plano. Faça upgrade para continuar.");
+      return;
+    }
+
     setLoading(true);
     try {
       const campaign = await generateCampaign(form);
