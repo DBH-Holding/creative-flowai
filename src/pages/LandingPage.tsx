@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { ArrowRight, Zap, MessageSquare, CheckCircle, BarChart3, Shield, Globe } from "lucide-react";
 import { plans } from "@/data/constants";
 import { cn } from "@/lib/utils";
+import logo from "@/assets/logo.png";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -148,9 +149,9 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="border-t border-border py-10">
         <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <div className="h-6 w-6 rounded bg-primary flex items-center justify-center font-bold text-primary-foreground text-xs">CF</div>
-            <span className="text-sm text-muted-foreground">CreativeFlow AI © 2026</span>
+          <div className="flex items-center gap-3">
+            <img src={logo} alt="CreativeFlow AI" className="h-6 w-auto opacity-70" />
+            <span className="text-sm text-muted-foreground">© 2026</span>
           </div>
           <div className="flex gap-6 text-sm text-muted-foreground">
             <Link to="/planos" className="hover:text-foreground transition-colors">Planos</Link>
