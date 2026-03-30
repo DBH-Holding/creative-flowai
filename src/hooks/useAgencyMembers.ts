@@ -52,10 +52,31 @@ export function useAgencyMembers(agencyId: string | undefined) {
         .single();
 
       if (error) throw error;
-      return data;
+
+      // Call edge function to process invite (email + generate URL)
+      const { data: inviteResult } = await supabase.functions.invoke("send-agency-invite", {
+        body: { inviteId: data.id },
+      });
+
+      return { ...data, inviteUrl: inviteResult?.inviteUrl };
     },
-    onSuccess: () => {
-      toast.success("Convite enviado com sucesso!");
+    onSuccess: (data: any) => {
+      if (data?.inviteUrl) {
+        // Copy invite link to clipboard
+        navigator.clipboard.writeText(data.inviteUrl).then(() => {
+          toast.success("Convite criado! Link copiado para a área de transferência.", {
+            description: `Envie o link para ${data.email}`,
+            duration: 6000,
+          });
+        }).catch(() => {
+          toast.success("Convite criado!", {
+            description: data.inviteUrl,
+            duration: 10000,
+          });
+        });
+      } else {
+        toast.success("Convite enviado com sucesso!");
+      }
       queryClient.invalidateQueries({ queryKey: ["agency-invites", agencyId] });
     },
     onError: (err: any) => {
