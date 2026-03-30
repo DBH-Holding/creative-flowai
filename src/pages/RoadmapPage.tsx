@@ -37,7 +37,7 @@ const phases: Phase[] = [
   },
   {
     title: "Multi-tenant — Agências & Clientes",
-    status: "in_progress",
+    status: "done",
     quarter: "Q2 2025",
     items: [
       { label: "Arquitetura multi-tenant", description: "Agências com gestão de clientes e membros da equipe", icon: Users, done: true },
@@ -45,9 +45,9 @@ const phases: Phase[] = [
       { label: "Convite por email", description: "Convide membros e clientes para sua agência com um link seguro", icon: Bell, done: true },
       { label: "Aprovação por role", description: "Apenas donos e gerentes aprovam; clientes enviam para aprovação", icon: Target, done: true },
       { label: "Feedbacks com contexto", description: "Comentários exibem o papel do autor na agência", icon: Users, done: true },
-      { label: "Email de convite automático", description: "Edge function para enviar email ao convidar membros", icon: Bell, done: false },
-      { label: "Dashboard da agência", description: "Visão consolidada de todas as campanhas e clientes", icon: Layers, done: false },
-      { label: "Filtros avançados", description: "Filtrar campanhas por cliente, status, data e canal", icon: Target, done: false },
+      { label: "Email de convite automático", description: "Edge function gera link de convite e copia para clipboard", icon: Bell, done: true },
+      { label: "Dashboard da agência", description: "Visão consolidada com métricas de campanhas, clientes e atividade", icon: Layers, done: true },
+      { label: "Filtros avançados", description: "Filtrar campanhas por cliente, status, data e canal", icon: Target, done: true },
     ],
   },
   {
