@@ -6,7 +6,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import logo from "@/assets/logo.png";
 
-const publicNavItems = [
+interface NavItem {
+  label: string;
+  href: string;
+  icon?: LucideIcon;
+}
+
+const publicNavItems: NavItem[] = [
   { label: "Produto", href: "/" },
   { label: "Roadmap", href: "/roadmap" },
   { label: "Planos", href: "/planos" },
@@ -14,7 +20,7 @@ const publicNavItems = [
   { label: "Integrações", href: "/integracoes" },
 ];
 
-const authNavItems = [
+const authNavItems: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Briefing", href: "/briefing", icon: FileText },
   { label: "Agência", href: "/agencia", icon: Building2 },
