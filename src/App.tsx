@@ -17,6 +17,7 @@ import IntegrationsPage from "./pages/IntegrationsPage";
 import DashboardPage from "./pages/DashboardPage";
 import AgencyPage from "./pages/AgencyPage";
 import AcceptInvitePage from "./pages/AcceptInvitePage";
+import RoadmapPage from "./pages/RoadmapPage";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import AdminUsersPage from "./pages/admin/AdminUsersPage";
 import AdminSubscriptionsPage from "./pages/admin/AdminSubscriptionsPage";
@@ -47,6 +48,7 @@ const App = () => (
             <Route path="/integracoes" element={<IntegrationsPage />} />
             <Route path="/agencia" element={<AgencyPage />} />
             <Route path="/convite" element={<AcceptInvitePage />} />
+            <Route path="/roadmap" element={<RoadmapPage />} />
             <Route path="/admin" element={<AdminDashboardPage />} />
             <Route path="/admin/users" element={<AdminUsersPage />} />
             <Route path="/admin/subscriptions" element={<AdminSubscriptionsPage />} />

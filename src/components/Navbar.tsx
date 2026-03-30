@@ -10,6 +10,7 @@ const navItems = [
   { label: "Produto", href: "/" },
   { label: "Dashboard", href: "/dashboard", auth: true },
   { label: "Agência", href: "/agencia", auth: true },
+  { label: "Roadmap", href: "/roadmap" },
   { label: "Planos", href: "/planos" },
   { label: "APIs", href: "/apis" },
   { label: "Integrações", href: "/integracoes" },
