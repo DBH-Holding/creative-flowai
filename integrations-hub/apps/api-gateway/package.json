@@ -1,0 +1,29 @@
+{
+  "name": "@creativeflow/api-gateway",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/server.ts",
+    "start": "node dist/server.js",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "fastify": "^4.28.0",
+    "@fastify/swagger": "^8.15.0",
+    "@fastify/swagger-ui": "^4.1.0",
+    "@fastify/rate-limit": "^9.1.0",
+    "@fastify/cors": "^9.0.0",
+    "@creativeflow/config": "workspace:*",
+    "@creativeflow/core": "workspace:*",
+    "@creativeflow/db": "workspace:*",
+    "@creativeflow/types": "workspace:*",
+    "@creativeflow/utils": "workspace:*",
+    "@creativeflow/queue": "workspace:*",
+    "@creativeflow/integrations": "workspace:*"
+  },
+  "devDependencies": {
+    "tsx": "^4.16.0",
+    "typescript": "^5.5.0"
+  }
+}
