@@ -1,0 +1,108 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum BriefingStatus {
+  received
+  validated
+  processing
+  sent_to_creativeflow
+  approved
+  rejected
+  published
+  failed
+}
+
+enum ClientStatus {
+  active
+  inactive
+  revoked
+}
+
+enum JobStatus {
+  pending
+  processing
+  completed
+  failed
+  retrying
+}
+
+enum JobType {
+  send_to_creativeflow
+  process_webhook
+  publish_campaign
+}
+
+model Briefing {
+  id             String          @id @default(cuid())
+  externalId     String?         @unique @map("external_id")
+  title          String
+  description    String          @db.Text
+  objective      String
+  targetAudience String          @map("target_audience")
+  toneOfVoice    String          @map("tone_of_voice")
+  channels       String[]
+  campaignType   String          @map("campaign_type")
+  attachments    String[]
+  references     String[]        @map("reference_urls")
+  status         BriefingStatus  @default(received)
+  source         String
+  sourceSystem   String?         @map("source_system")
+  createdBy      String          @map("created_by")
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
+
+  processingJobs ProcessingJob[]
+
+  @@index([status])
+  @@index([source])
+  @@index([createdAt])
+  @@map("briefings")
+}
+
+model IntegrationClient {
+  id             String       @id @default(cuid())
+  name           String       @unique
+  apiKeyHash     String       @unique @map("api_key_hash")
+  status         ClientStatus @default(active)
+  rateLimit      Int          @default(100) @map("rate_limit")
+  allowedOrigins String[]     @map("allowed_origins")
+  createdAt      DateTime     @default(now()) @map("created_at")
+
+  @@map("integration_clients")
+}
+
+model WebhookEvent {
+  id        String   @id @default(cuid())
+  provider  String
+  eventType String   @map("event_type")
+  payload   Json
+  processed Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([provider, eventType])
+  @@index([processed])
+  @@map("webhook_events")
+}
+
+model ProcessingJob {
+  id         String    @id @default(cuid())
+  briefingId String    @map("briefing_id")
+  jobType    JobType   @map("job_type")
+  status     JobStatus @default(pending)
+  attempts   Int       @default(0)
+  lastError  String?   @map("last_error") @db.Text
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+
+  briefing Briefing @relation(fields: [briefingId], references: [id], onDelete: Cascade)
+
+  @@index([briefingId])
+  @@index([status])
+  @@map("processing_jobs")
+}
