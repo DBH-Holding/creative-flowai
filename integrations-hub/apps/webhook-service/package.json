@@ -1,0 +1,21 @@
+{
+  "name": "@creativeflow/webhook-service",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/worker.ts",
+    "start": "node dist/worker.js",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@creativeflow/config": "workspace:*",
+    "@creativeflow/db": "workspace:*",
+    "@creativeflow/queue": "workspace:*",
+    "@creativeflow/utils": "workspace:*"
+  },
+  "devDependencies": {
+    "tsx": "^4.16.0",
+    "typescript": "^5.5.0"
+  }
+}
