@@ -6,12 +6,14 @@ import { generateCampaign } from "@/services/ai-service";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useAgency } from "@/hooks/useAgency";
 import { toast } from "sonner";
 
 export default function BriefingPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { sub, canCreateCampaign, remainingCampaigns, loading: subLoading } = useSubscription();
+  const { currentAgency } = useAgency();
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     campaignName: "",
@@ -52,6 +54,7 @@ export default function BriefingPage() {
           main_channel: form.mainChannel,
           notes: form.notes || null,
           open_briefing: form.openBriefing || null,
+          ...(currentAgency ? { agency_id: currentAgency.id, client_user_id: user.id } : {}),
         })
         .select()
         .single();
@@ -71,6 +74,7 @@ export default function BriefingPage() {
           posts: campaign.posts as any,
           ad: campaign.ad as any,
           status: "em_analise",
+          ...(currentAgency ? { agency_id: currentAgency.id } : {}),
         })
         .select()
         .single();

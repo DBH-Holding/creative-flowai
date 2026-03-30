@@ -15,6 +15,8 @@ import ApisPage from "./pages/ApisPage";
 import ProfilePage from "./pages/ProfilePage";
 import IntegrationsPage from "./pages/IntegrationsPage";
 import DashboardPage from "./pages/DashboardPage";
+import AgencyPage from "./pages/AgencyPage";
+import AcceptInvitePage from "./pages/AcceptInvitePage";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import AdminUsersPage from "./pages/admin/AdminUsersPage";
 import AdminSubscriptionsPage from "./pages/admin/AdminSubscriptionsPage";
@@ -43,6 +45,8 @@ const App = () => (
             <Route path="/perfil" element={<ProfilePage />} />
             <Route path="/apis" element={<ApisPage />} />
             <Route path="/integracoes" element={<IntegrationsPage />} />
+            <Route path="/agencia" element={<AgencyPage />} />
+            <Route path="/convite" element={<AcceptInvitePage />} />
             <Route path="/admin" element={<AdminDashboardPage />} />
             <Route path="/admin/users" element={<AdminUsersPage />} />
             <Route path="/admin/subscriptions" element={<AdminSubscriptionsPage />} />
