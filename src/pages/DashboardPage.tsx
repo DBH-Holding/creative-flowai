@@ -29,6 +29,7 @@ const statusConfig: Record<string, { label: string; variant: "default" | "second
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const { currentAgency, hasAgency } = useAgency();
   const [campaigns, setCampaigns] = useState<CampaignRow[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -42,16 +43,24 @@ export default function DashboardPage() {
     if (!user) return;
     const fetchCampaigns = async () => {
       setLoading(true);
-      const { data } = await supabase
+      let query = supabase
         .from("campaigns")
         .select("id, summary, objective, status, created_at, updated_at, briefing_id")
-        .eq("user_id", user.id)
         .order("created_at", { ascending: false });
+
+      // If user belongs to an agency, show all agency campaigns
+      if (currentAgency) {
+        query = query.eq("agency_id", currentAgency.id);
+      } else {
+        query = query.eq("user_id", user.id);
+      }
+
+      const { data } = await query;
       setCampaigns(data ?? []);
       setLoading(false);
     };
     fetchCampaigns();
-  }, [user]);
+  }, [user, currentAgency]);
 
   if (authLoading) return null;
 
