@@ -13,6 +13,7 @@ export default function BriefingPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { sub, canCreateCampaign, remainingCampaigns, loading: subLoading } = useSubscription();
+  const { currentAgency } = useAgency();
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     campaignName: "",
