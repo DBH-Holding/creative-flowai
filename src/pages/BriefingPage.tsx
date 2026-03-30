@@ -6,6 +6,7 @@ import { generateCampaign } from "@/services/ai-service";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useAgency } from "@/hooks/useAgency";
 import { toast } from "sonner";
 
 export default function BriefingPage() {
