@@ -50,6 +50,13 @@ const stats = [
 ];
 
 export default function LandingPage() {
+  const { user, loading } = useAuth();
+
+  // Redirect authenticated users to dashboard
+  if (!loading && user) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   return (
     <div className="min-h-screen">
       {/* Hero */}
