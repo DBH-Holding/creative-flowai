@@ -1,7 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
-import { Menu, X, LogOut, User, Shield, LayoutDashboard, FileText, Megaphone, CreditCard, UserCircle, Building2, Plug, Map } from "lucide-react";
+import { Menu, X, LogOut, User, Shield, LayoutDashboard, FileText, Megaphone, CreditCard, UserCircle, Building2, Plug, Map, LucideIcon } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import logo from "@/assets/logo.png";
