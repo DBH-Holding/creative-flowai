@@ -1,23 +1,26 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { ApprovalStatus, Feedback, AIInsight, ChecklistItem } from "@/types";
 import { analyzeFeeedback, generateChecklist } from "@/services/ai-service";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useAgency } from "@/hooks/useAgency";
 import { toast } from "sonner";
 import {
   Sparkles, MessageSquare, CheckCircle, ArrowLeft, Send, Loader2,
   ThumbsUp, AlertTriangle, ListChecks, Eye, Clock, Check, X,
+  Building2, User, Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const statusConfig: Record<ApprovalStatus, { label: string; color: string; icon: React.ElementType }> = {
-  em_analise: { label: "Em análise", color: "text-info", icon: Eye },
-  aguardando_aprovacao: { label: "Aguardando aprovação", color: "text-warning", icon: Clock },
-  aprovado: { label: "Aprovado", color: "text-success", icon: Check },
-  ajustes_solicitados: { label: "Ajustes solicitados", color: "text-destructive", icon: AlertTriangle },
+const statusConfig: Record<ApprovalStatus, { label: string; color: string; icon: React.ElementType; badgeVariant: "default" | "secondary" | "destructive" | "outline" }> = {
+  em_analise: { label: "Em análise", color: "text-muted-foreground", icon: Eye, badgeVariant: "secondary" },
+  aguardando_aprovacao: { label: "Aguardando aprovação", color: "text-yellow-500", icon: Clock, badgeVariant: "outline" },
+  aprovado: { label: "Aprovado", color: "text-primary", icon: Check, badgeVariant: "default" },
+  ajustes_solicitados: { label: "Ajustes solicitados", color: "text-destructive", icon: AlertTriangle, badgeVariant: "destructive" },
 };
 
 interface DBCampaign {
@@ -29,6 +32,8 @@ interface DBCampaign {
   posts: any;
   ad: any;
   status: string;
+  user_id: string;
+  agency_id: string | null;
 }
 
 export default function CampaignPage() {
@@ -36,6 +41,7 @@ export default function CampaignPage() {
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { canAddFeedback, remainingFeedbacks } = useSubscription();
+  const { currentAgency, currentRole, isAgencyAdmin, isClient, hasAgency } = useAgency();
   const campaignId = searchParams.get("id");
 
   const [campaign, setCampaign] = useState<DBCampaign | null>(null);
@@ -46,6 +52,13 @@ export default function CampaignPage() {
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
   const [loadingInsight, setLoadingInsight] = useState(false);
   const [loadingChecklist, setLoadingChecklist] = useState(false);
+  const [statusHistory, setStatusHistory] = useState<Array<{ status: string; changed_at: string; changed_by: string }>>([]);
+
+  // Permission logic based on role
+  const canApprove = isAgencyAdmin || (!hasAgency && campaign?.user_id === user?.id);
+  const canRequestChanges = isAgencyAdmin || isClient || (!hasAgency && campaign?.user_id === user?.id);
+  const canSubmitForApproval = isClient || (!hasAgency && campaign?.user_id === user?.id);
+  const canComment = true; // Everyone can comment
 
   useEffect(() => {
     if (!campaignId) { navigate("/briefing"); return; }
@@ -85,6 +98,28 @@ export default function CampaignPage() {
     setStatus(newStatus);
     if (campaignId) {
       await supabase.from("campaigns").update({ status: newStatus }).eq("id", campaignId);
+
+      // Add a system feedback for status change
+      const statusLabel = statusConfig[newStatus].label;
+      const authorName = user?.email || "Sistema";
+      const systemMessage = `📋 Status alterado para "${statusLabel}" por ${authorName}`;
+
+      const { data } = await supabase
+        .from("feedbacks")
+        .insert({
+          campaign_id: campaignId,
+          user_id: user!.id,
+          author: "Sistema",
+          message: systemMessage,
+        })
+        .select()
+        .single();
+
+      if (data) {
+        setFeedbacks(prev => [...prev, { id: data.id, author: data.author, message: data.message, createdAt: data.created_at }]);
+      }
+
+      toast.success(`Status atualizado para "${statusLabel}"`);
     }
   };
 
@@ -96,12 +131,15 @@ export default function CampaignPage() {
       return;
     }
 
+    const roleSuffix = hasAgency && currentRole ? ` (${currentRole === "owner" ? "Dono" : currentRole === "manager" ? "Gerente" : currentRole === "member" ? "Equipe" : "Cliente"})` : "";
+    const authorName = (user.user_metadata?.full_name || user.email || "Usuário") + roleSuffix;
+
     const { data, error } = await supabase
       .from("feedbacks")
       .insert({
         campaign_id: campaignId,
         user_id: user.id,
-        author: user.email || "Usuário",
+        author: authorName,
         message: newFeedback,
       })
       .select()
@@ -110,7 +148,6 @@ export default function CampaignPage() {
     if (data && !error) {
       setFeedbacks((prev) => [...prev, { id: data.id, author: data.author, message: data.message, createdAt: data.created_at }]);
       setNewFeedback("");
-      // Increment feedbacks_used via RPC
       await supabase.rpc("increment_feedbacks_used", { _user_id: user.id });
     }
   };
@@ -134,7 +171,6 @@ export default function CampaignPage() {
       campaign?.summary
     );
 
-    // Save to DB
     const rows = items.map(item => ({
       campaign_id: campaignId,
       text: item.text,
@@ -165,18 +201,26 @@ export default function CampaignPage() {
   return (
     <div className="min-h-screen pt-24 pb-16">
       <div className="container mx-auto px-4 max-w-4xl">
-        <Button variant="ghost" size="sm" asChild className="mb-6">
-          <Link to="/briefing"><ArrowLeft className="h-4 w-4 mr-1" /> Novo briefing</Link>
-        </Button>
+        <div className="flex items-center justify-between mb-6">
+          <Button variant="ghost" size="sm" asChild>
+            <Link to="/dashboard"><ArrowLeft className="h-4 w-4 mr-1" /> Dashboard</Link>
+          </Button>
+          {hasAgency && (
+            <Badge variant="outline" className="gap-1.5">
+              <Building2 className="h-3 w-3" />
+              {currentAgency?.name}
+            </Badge>
+          )}
+        </div>
 
         {/* Campaign Summary */}
         <div className="rounded-xl border border-border bg-card p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-2xl font-bold">Resultado da Campanha</h1>
-            <span className={cn("inline-flex items-center gap-1.5 text-sm font-medium", statusConfig[status].color)}>
-              <StatusIcon className="h-4 w-4" />
+            <Badge variant={statusConfig[status].badgeVariant} className="gap-1.5">
+              <StatusIcon className="h-3.5 w-3.5" />
               {statusConfig[status].label}
-            </span>
+            </Badge>
           </div>
           <p className="text-muted-foreground mb-6">{campaign.summary}</p>
 
@@ -238,52 +282,107 @@ export default function CampaignPage() {
           </div>
         </div>
 
-        {/* Approval Section */}
+        {/* Approval & Feedback Section */}
         <div className="rounded-xl border border-border bg-card p-6 mb-6">
-          <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-            <MessageSquare className="h-5 w-5" /> Aprovação do Criativo
+          <h2 className="text-xl font-bold mb-2 flex items-center gap-2">
+            <MessageSquare className="h-5 w-5" /> Aprovação & Feedback
           </h2>
+          <p className="text-sm text-muted-foreground mb-4">
+            {hasAgency
+              ? "Todos os membros da agência podem comentar. Apenas donos e gerentes podem aprovar."
+              : "Gerencie o status e adicione comentários."}
+          </p>
 
-          {/* Feedback input */}
-          <div className="flex gap-2 mb-4">
-            <input
-              className="flex-1 rounded-lg border border-border bg-background px-4 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-              placeholder="Adicione um comentário..."
-              value={newFeedback}
-              onChange={(e) => setNewFeedback(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && addFeedback()}
-            />
-            <Button size="default" onClick={addFeedback}><Send className="h-4 w-4" /></Button>
+          {/* Status Flow Actions */}
+          <div className="flex flex-wrap gap-2 mb-6 p-4 rounded-lg bg-secondary/50 border border-border">
+            <span className="w-full text-xs font-medium text-muted-foreground mb-1">Ações de status:</span>
+
+            {/* Client: Submit for approval */}
+            {canSubmitForApproval && status === "em_analise" && (
+              <Button size="sm" variant="outline" onClick={() => updateStatus("aguardando_aprovacao")} className="gap-1.5">
+                <Clock className="h-3.5 w-3.5" /> Enviar para aprovação
+              </Button>
+            )}
+
+            {/* Admin: Approve */}
+            {canApprove && (status === "aguardando_aprovacao" || status === "em_analise") && (
+              <Button size="sm" variant="default" onClick={() => updateStatus("aprovado")} className="gap-1.5 bg-primary hover:bg-primary/90">
+                <ThumbsUp className="h-3.5 w-3.5" /> Aprovar
+              </Button>
+            )}
+
+            {/* Admin/Client: Request changes */}
+            {canRequestChanges && status !== "ajustes_solicitados" && status !== "aprovado" && (
+              <Button size="sm" variant="destructive" onClick={() => updateStatus("ajustes_solicitados")} className="gap-1.5">
+                <AlertTriangle className="h-3.5 w-3.5" /> Solicitar ajustes
+              </Button>
+            )}
+
+            {/* Re-submit after adjustments */}
+            {canSubmitForApproval && status === "ajustes_solicitados" && (
+              <Button size="sm" variant="outline" onClick={() => updateStatus("aguardando_aprovacao")} className="gap-1.5">
+                <Clock className="h-3.5 w-3.5" /> Reenviar para aprovação
+              </Button>
+            )}
+
+            {/* Show current status info */}
+            {status === "aprovado" && (
+              <div className="flex items-center gap-1.5 text-sm text-primary font-medium">
+                <Check className="h-4 w-4" /> Campanha aprovada ✓
+              </div>
+            )}
           </div>
 
-          {/* Feedback list */}
-          {feedbacks.length > 0 && (
-            <div className="space-y-3 mb-6">
-              {feedbacks.map((fb) => (
-                <div key={fb.id} className="p-3 rounded-lg bg-secondary text-sm">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-medium">{fb.author}</span>
-                    <span className="text-xs text-muted-foreground">{new Date(fb.createdAt).toLocaleTimeString("pt-BR")}</span>
-                  </div>
-                  <p className="text-muted-foreground">{fb.message}</p>
-                </div>
-              ))}
+          {/* Feedback input */}
+          {canComment && (
+            <div className="flex gap-2 mb-4">
+              <input
+                className="flex-1 rounded-lg border border-border bg-background px-4 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                placeholder="Adicione um comentário..."
+                value={newFeedback}
+                onChange={(e) => setNewFeedback(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && addFeedback()}
+              />
+              <Button size="default" onClick={addFeedback}><Send className="h-4 w-4" /></Button>
             </div>
           )}
 
-          {/* Action buttons */}
-          <div className="flex flex-wrap gap-3">
-            <Button variant="hero" size="sm" onClick={() => updateStatus("aprovado")}>
-              <ThumbsUp className="h-4 w-4" /> Aprovar
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => updateStatus("ajustes_solicitados")}>
-              <AlertTriangle className="h-4 w-4" /> Solicitar ajustes
-            </Button>
-            <Button variant="subtle" size="sm" onClick={handleAnalyze} disabled={loadingInsight}>
+          {/* Feedback list */}
+          {feedbacks.length > 0 && (
+            <div className="space-y-3 mb-6 max-h-[400px] overflow-y-auto">
+              {feedbacks.map((fb) => {
+                const isSystem = fb.author === "Sistema";
+                return (
+                  <div
+                    key={fb.id}
+                    className={cn(
+                      "p-3 rounded-lg text-sm",
+                      isSystem ? "bg-primary/5 border border-primary/10" : "bg-secondary"
+                    )}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className={cn("font-medium flex items-center gap-1.5", isSystem && "text-primary")}>
+                        {isSystem ? <Shield className="h-3 w-3" /> : <User className="h-3 w-3 text-muted-foreground" />}
+                        {fb.author}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(fb.createdAt).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                      </span>
+                    </div>
+                    <p className={cn("text-muted-foreground", isSystem && "text-primary/80 italic")}>{fb.message}</p>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* AI Action buttons */}
+          <div className="flex flex-wrap gap-3 pt-4 border-t border-border">
+            <Button variant="subtle" size="sm" onClick={handleAnalyze} disabled={loadingInsight || feedbacks.length === 0}>
               {loadingInsight ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
               Analisar feedback com IA
             </Button>
-            <Button variant="subtle" size="sm" onClick={handleChecklist} disabled={loadingChecklist}>
+            <Button variant="subtle" size="sm" onClick={handleChecklist} disabled={loadingChecklist || feedbacks.length === 0}>
               {loadingChecklist ? <Loader2 className="h-4 w-4 animate-spin" /> : <ListChecks className="h-4 w-4" />}
               Transformar em checklist
             </Button>
@@ -343,7 +442,7 @@ export default function CampaignPage() {
                   onClick={() => toggleCheck(item.id)}
                   className={cn(
                     "w-full flex items-center gap-3 p-3 rounded-lg text-sm text-left transition-colors",
-                    item.done ? "bg-primary/10" : "bg-secondary hover:bg-surface-hover"
+                    item.done ? "bg-primary/10" : "bg-secondary hover:bg-muted"
                   )}
                 >
                   <div className={cn(
