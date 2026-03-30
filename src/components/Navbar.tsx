@@ -47,7 +47,7 @@ export default function Navbar() {
         {/* Desktop */}
         <div className="hidden md:flex items-center gap-1">
           {navItems.map((item) => {
-            const Icon = "icon" in item ? item.icon : null;
+            const Icon = item.icon;
             return (
               <Link
                 key={item.href}
