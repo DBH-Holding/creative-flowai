@@ -9,6 +9,7 @@ import logo from "@/assets/logo.png";
 const navItems = [
   { label: "Produto", href: "/" },
   { label: "Dashboard", href: "/dashboard", auth: true },
+  { label: "Agência", href: "/agencia", auth: true },
   { label: "Planos", href: "/planos" },
   { label: "APIs", href: "/apis" },
   { label: "Integrações", href: "/integracoes" },
