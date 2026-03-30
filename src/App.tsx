@@ -15,6 +15,8 @@ import ApisPage from "./pages/ApisPage";
 import ProfilePage from "./pages/ProfilePage";
 import IntegrationsPage from "./pages/IntegrationsPage";
 import DashboardPage from "./pages/DashboardPage";
+import AgencyPage from "./pages/AgencyPage";
+import AcceptInvitePage from "./pages/AcceptInvitePage";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import AdminUsersPage from "./pages/admin/AdminUsersPage";
 import AdminSubscriptionsPage from "./pages/admin/AdminSubscriptionsPage";
