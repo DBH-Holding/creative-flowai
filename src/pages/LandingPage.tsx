@@ -1,9 +1,10 @@
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { ArrowRight, Zap, MessageSquare, CheckCircle, BarChart3, Shield, Globe, Star, Quote } from "lucide-react";
 import { plans } from "@/data/constants";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 import logo from "@/assets/logo.png";
 
 const fadeUp = {
