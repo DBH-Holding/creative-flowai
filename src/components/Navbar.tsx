@@ -103,7 +103,7 @@ export default function Navbar() {
       {open && (
         <div className="md:hidden border-t border-border bg-background px-4 pb-4">
           {navItems.map((item) => {
-            const Icon = "icon" in item ? item.icon : null;
+            const Icon = item.icon;
             return (
               <Link
                 key={item.href}
