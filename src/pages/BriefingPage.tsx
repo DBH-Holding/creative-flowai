@@ -74,6 +74,7 @@ export default function BriefingPage() {
           posts: campaign.posts as any,
           ad: campaign.ad as any,
           status: "em_analise",
+          ...(currentAgency ? { agency_id: currentAgency.id } : {}),
         })
         .select()
         .single();
