@@ -54,6 +54,7 @@ export default function BriefingPage() {
           main_channel: form.mainChannel,
           notes: form.notes || null,
           open_briefing: form.openBriefing || null,
+          ...(currentAgency ? { agency_id: currentAgency.id, client_user_id: user.id } : {}),
         })
         .select()
         .single();
