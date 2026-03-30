@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAgency } from "@/hooks/useAgency";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, FileText, Clock, CheckCircle2, AlertCircle, Eye } from "lucide-react";
+import { Plus, FileText, Clock, CheckCircle2, AlertCircle, Eye, Building2 } from "lucide-react";
 
 interface CampaignRow {
   id: string;
